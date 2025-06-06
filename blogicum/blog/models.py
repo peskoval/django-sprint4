@@ -9,8 +9,6 @@ SLUG_HELP = (
     'Идентификатор страницы для URL; разрешены символы '
     'латиницы, цифры, дефис и подчёркивание.')
 
-User = get_user_model()
-
 
 class PublicationModel(models.Model):
     created_at = models.DateTimeField(

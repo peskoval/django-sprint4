@@ -87,11 +87,7 @@ class UserProfileView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.first_name and self.request.user.last_name:
-            full_name = (
-                f'{self.request.user.first_name} {self.request.user.last_name}'
-            )
-            context['get_full_name'] = full_name
+        context['get_full_name'] = self.object.get_full_name()
         paginator = Paginator(
             Post.objects.filter(author=self.get_object()),
             10,
@@ -102,14 +98,19 @@ class UserProfileView(DetailView):
         return context
 
 
-class EditProfileView(LoginRequiredMixin, UpdateView):
+class EditProfileView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = get_user_model()
     fields = ('username', 'first_name', 'last_name', 'email',)
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
     template_name = 'blog/user.html'
 
     def get_object(self, queryset=None):
-        username = self.kwargs.get(self.slug_url_kwarg)
-        return get_object_or_404(self.User, **{self.slug_field: username})
+        return get_object_or_404(get_user_model(), **{self.slug_field: self.request.user.username})
+
+    def test_func(self):
+        profile = self.get_object()
+        return self.request.user.username == profile.username
 
     def get_success_url(self):
         return reverse_lazy(
@@ -258,9 +259,9 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
 
-    def get_object(self, queryset=None):
-        comment_id = self.kwargs.get(self.pk_url_kwarg)
-        return get_object_or_404(Comment, id=comment_id)
+    # def get_object(self, queryset=None):
+    #     comment_id = self.kwargs.get(self.pk_url_kwarg)
+    #     return get_object_or_404(Comment, id=comment_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
