@@ -1,0 +1,622 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.10, pytest-8.3.3, pluggy-1.5.0 -- /Users/vieuxcamee/Desktop/Python/.venv/bin/python
+django: version: 5.1.1, settings: blogicum.settings (from ini)
+rootdir: /Users/vieuxcamee/Desktop/Python/Yandex_Practikum/BackendPython+/django-sprint4
+configfile: pytest.ini
+testpaths: tests/
+plugins: Faker-12.0.1, django-4.9.0
+collecting ... collected 26 items
+
+tests/test_content.py::TestContent::test_unpublished PASSED              [  3%]
+tests/test_content.py::TestContent::test_only_own_pubs_in_category PASSED [  7%]
+tests/test_content.py::TestContent::test_only_own_pubs_in_profile PASSED [ 11%]
+tests/test_content.py::TestContent::test_unpublished_category PASSED     [ 15%]
+tests/test_content.py::TestContent::test_future_posts PASSED             [ 19%]
+tests/test_content.py::TestContent::test_pagination PASSED               [ 23%]
+tests/test_content.py::TestContent::test_image_visible PASSED            [ 26%]
+tests/test_err_pages.py::test_custom_err_handlers PASSED                 [ 30%]
+tests/test_users.py::test_custom_err_handlers PASSED                     [ 34%]
+tests/test_users.py::test_profile FAILED                                 [ 38%]
+tests/test_comment.py::test_comment_created_at PASSED                    [ 42%]
+tests/test_comment.py::test_comment FAILED                               [ 46%]
+tests/test_comment.py::test_404_on_comment_deleted_post FAILED           [ 50%]
+tests/test_post.py::test_post_created_at PASSED                          [ 53%]
+tests/test_post.py::test_post FAILED                                     [ 57%]
+tests/test_comment.py::TestCommentModelAttrs::test_model_attrs[`post` field] <- tests/conftest.py PASSED [ 61%]
+tests/test_comment.py::TestCommentModelAttrs::test_model_attrs[`author` field] <- tests/conftest.py PASSED [ 65%]
+tests/test_comment.py::TestCommentModelAttrs::test_model_attrs[`text` field] <- tests/conftest.py PASSED [ 69%]
+tests/test_comment.py::TestCommentModelAttrs::test_model_attrs[`created_at` field] <- tests/conftest.py PASSED [ 73%]
+tests/test_comment.py::test_link_order_in_comment_template PASSED        [ 76%]
+tests/test_emails.py::test_gitignore PASSED                              [ 80%]
+tests/test_emails.py::test_email_backend_settings PASSED                 [ 84%]
+tests/test_err_pages.py::test_csrf_failure_view PASSED                   [ 88%]
+tests/test_post.py::TestPostModelAttrs::test_model_attrs[`image` field] <- tests/conftest.py PASSED [ 92%]
+tests/test_post.py::TestPostModelAttrs::test_model_attrs[`pub_date` field] <- tests/conftest.py PASSED [ 96%]
+tests/test_static_pages.py::test_static_pages_as_cbv PASSED              [100%]
+
+=================================== FAILURES ===================================
+_________________________________ test_profile _________________________________
+
+user = <User: warddevin>, another_user = <User: natalieburns>
+user_client = <django.test.client.Client object at 0x104959310>
+another_user_client = <django.test.client.Client object at 0x1047498b0>
+unlogged_client = <django.test.client.Client object at 0x1048a2210>
+
+    @pytest.mark.django_db
+    def test_profile(
+            user, another_user, user_client, another_user_client, unlogged_client
+    ):
+        user_url = f"/profile/{user.username}/"
+        printed_url = "/profile/<username>/"
+    
+        User = get_user_model()
+        status_code_not_404_err_msg = (
+            "Убедитесь, что при обращении к странице несуществующего "
+            "пользователя возвращается статус 404."
+        )
+        try:
+            response = user_client.get("/profile/this_is_unexisting_user_name/")
+        except User.DoesNotExist:
+            raise AssertionError(status_code_not_404_err_msg)
+    
+        assert response.status_code == HTTPStatus.NOT_FOUND, (
+            status_code_not_404_err_msg)
+    
+        user_response: HttpResponse = user_client.get(user_url)
+    
+        user_content = user_response.content.decode("utf-8")
+    
+        anothers_same_page_response: HttpResponse = another_user_client.get(
+            user_url
+        )
+        anothers_same_page_content = anothers_same_page_response.content.decode(
+            "utf-8"
+        )
+    
+>       unlogged_same_page_response: HttpResponse = unlogged_client.get(user_url)
+
+tests/test_users.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../.venv/lib/python3.12/site-packages/django/test/client.py:1129: in get
+    response = super().get(
+../../../.venv/lib/python3.12/site-packages/django/test/client.py:479: in get
+    return self.generic(
+../../../.venv/lib/python3.12/site-packages/django/test/client.py:676: in generic
+    return self.request(**r)
+../../../.venv/lib/python3.12/site-packages/django/test/client.py:1092: in request
+    self.check_exception(response)
+../../../.venv/lib/python3.12/site-packages/django/test/client.py:805: in check_exception
+    raise exc_value
+../../../.venv/lib/python3.12/site-packages/django/core/handlers/exception.py:55: in inner
+    response = get_response(request)
+../../../.venv/lib/python3.12/site-packages/django/core/handlers/base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+../../../.venv/lib/python3.12/site-packages/django/views/generic/base.py:104: in view
+    return self.dispatch(request, *args, **kwargs)
+../../../.venv/lib/python3.12/site-packages/django/views/generic/base.py:143: in dispatch
+    return handler(request, *args, **kwargs)
+../../../.venv/lib/python3.12/site-packages/django/views/generic/detail.py:109: in get
+    context = self.get_context_data(object=self.object)
+blogicum/blog/views.py:86: in get_context_data
+    if self.request.user.first_name and self.request.user.last_name:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x1049bf5c0>>
+args = ('first_name',)
+_wrapped = <django.contrib.auth.models.AnonymousUser object at 0x1049bf5c0>
+
+    def inner(self, *args):
+        if (_wrapped := self._wrapped) is empty:
+            self._setup()
+            _wrapped = self._wrapped
+>       return func(_wrapped, *args)
+E       AttributeError: 'AnonymousUser' object has no attribute 'first_name'
+
+../../../.venv/lib/python3.12/site-packages/django/utils/functional.py:253: AttributeError
+_________________________________ test_comment _________________________________
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x1048aed80>
+forms = [<CommentForm bound=True, valid=True, fields=(comment)>, <CommentForm bound=True, valid=Unknown, fields=(comment)>, <CommentForm bound=True, valid=Unknown, fields=(comment)>, <CommentForm bound=True, valid=Unknown, fields=(comment)>]
+qs = <QuerySet []>
+
+    def test_create_several(
+        self, forms: Iterable[BaseForm], qs: QuerySet
+    ) -> Tuple[HttpResponse, List[Model]]:
+        created_items = []
+        for form in forms:
+            try:
+>               response, created = self.test_create_item(
+                    form,
+                    qs,
+                    AuthorisedSubmitTester(
+                        self,
+                        test_response_cbk=(
+                            AuthorisedSubmitTester.get_test_response_ok_cbk(
+                                tester=self
+                            )
+                        ),
+                    ),
+                    assert_created=True,
+                )
+
+tests/form/base_form_tester.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/form/base_form_tester.py:264: in test_create_item
+    response, created = self.try_create_item(
+tests/form/comment/create_form_tester.py:83: in try_create_item
+    return super().try_create_item(form, qs, submitter, assert_created)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x1048aed80>
+form = <CommentForm bound=True, valid=True, fields=(comment)>
+qs = <QuerySet []>
+submitter = <form.base_form_tester.AuthorisedSubmitTester object at 0x104a33750>
+assert_created = True
+
+    def try_create_item(
+        self,
+        form: BaseForm,
+        qs: QuerySet,
+        submitter: SubmitTester,
+        assert_created: bool = True,
+    ) -> Tuple[HttpResponse, Model]:
+        if not form.is_valid():
+            raise FormValidationException(form.errors)
+        elif form.errors:
+            raise FormValidationException(form.errors)
+    
+        items_before = set(qs.all())
+    
+        restored_data = restore_cleaned_data(form.cleaned_data)
+        try:
+            response = submitter.test_submit(
+                url=self._action, data=restored_data
+            )
+        except Exception as e:
+            raise FormValidationException(e) from e
+    
+        items_after: Set[Model] = set(qs.all())
+        created_items = items_after - items_before
+        n_created = len(created_items)
+        created = next(iter(created_items)) if created_items else None
+    
+        if assert_created:
+            if not n_created:
+>               raise ItemNotCreatedException()
+E               conftest.ItemNotCreatedException
+
+tests/form/base_form_tester.py:216: ItemNotCreatedException
+
+During handling of the above exception, another exception occurred:
+
+user_client = <django.test.client.Client object at 0x104972f60>
+another_user_client = <django.test.client.Client object at 0x104625310>
+unlogged_client = <django.test.client.Client object at 0x104972840>
+post_with_published_location = <Post: Challenge Resource Side Ready Upon Practice>
+another_user = <User: kwade>
+post_comment_context_form_item = KeyVal(key='form', val=<CommentForm bound=False, valid=False, fields=(comment)>)
+CommentModel = <class 'blog.models.Comment'>
+CommentModelAdapter = <class 'adapters.comment.CommentModelAdapter.<locals>._CommentModelAdapter'>
+profile_content_tester = <test_content.ProfilePostContentTester object at 0x10489ec90>
+
+    @pytest.mark.django_db(transaction=True)
+    def test_comment(
+            user_client: django.test.Client,
+            another_user_client: django.test.Client,
+            unlogged_client: django.test.Client,
+            post_with_published_location: Any,
+            another_user: Model,
+            post_comment_context_form_item: Tuple[str, BaseForm],
+            CommentModel: Type[Model],
+            CommentModelAdapter: CommentModelAdapterT,
+            profile_content_tester: ProfilePostContentTester
+    ):
+        post_with_published_location.author = another_user
+        post_with_published_location.save()
+        _, ctx_form = post_comment_context_form_item
+        a_post_get_response = get_a_post_get_response_safely(
+            user_client, post_with_published_location.id
+        )
+    
+        # create comments
+        creation_tester = CreateCommentFormTester(
+            a_post_get_response,
+            CommentModel,
+            user_client,
+            another_user_client,
+            unlogged_client,
+            item_adapter=None,
+            ModelAdapter=CommentModelAdapter,
+        )
+    
+        Form: Type[BaseForm] = type(ctx_form)
+        forms_to_create = create_comment_creation_forms(
+            creation_tester, Form, CommentModel, CommentModelAdapter)
+    
+>       response_on_created, created_items = creation_tester.test_create_several(
+            forms_to_create[1:], qs=CommentModel.objects.all()
+        )
+
+tests/test_comment.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x1048aed80>
+forms = [<CommentForm bound=True, valid=True, fields=(comment)>, <CommentForm bound=True, valid=Unknown, fields=(comment)>, <CommentForm bound=True, valid=Unknown, fields=(comment)>, <CommentForm bound=True, valid=Unknown, fields=(comment)>]
+qs = <QuerySet []>
+
+    def test_create_several(
+        self, forms: Iterable[BaseForm], qs: QuerySet
+    ) -> Tuple[HttpResponse, List[Model]]:
+        created_items = []
+        for form in forms:
+            try:
+                response, created = self.test_create_item(
+                    form,
+                    qs,
+                    AuthorisedSubmitTester(
+                        self,
+                        test_response_cbk=(
+                            AuthorisedSubmitTester.get_test_response_ok_cbk(
+                                tester=self
+                            )
+                        ),
+                    ),
+                    assert_created=True,
+                )
+            except ItemNotCreatedException:
+>               raise AssertionError(self.item_not_created_assertion_msg)
+E               AssertionError: Убедитесь, что при отправке формы создания комментария авторизованным пользователем в базе данных создаётся один и только один объект комментария.
+
+tests/form/base_form_tester.py:308: AssertionError
+_______________________ test_404_on_comment_deleted_post _______________________
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x10492efc0>
+form = <CommentForm bound=True, valid=True, fields=(comment)>
+qs = <QuerySet []>
+submitter = <form.base_form_tester.AuthorisedSubmitTester object at 0x104a56da0>
+assert_created = False
+
+    def try_create_item(
+        self,
+        form: BaseForm,
+        qs: QuerySet,
+        submitter: SubmitTester,
+        assert_created: bool = True,
+    ) -> Tuple[HttpResponse, Model]:
+        if not form.is_valid():
+            raise FormValidationException(form.errors)
+        elif form.errors:
+            raise FormValidationException(form.errors)
+    
+        items_before = set(qs.all())
+    
+        restored_data = restore_cleaned_data(form.cleaned_data)
+        try:
+>           response = submitter.test_submit(
+                url=self._action, data=restored_data
+            )
+
+tests/form/base_form_tester.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/form/base_form_tester.py:450: in test_submit
+    self._test_response_cbk(response)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = <TemplateResponse status_code=200, "text/html; charset=utf-8">
+err_msg = 'Убедитесь, что при попытке создания комментария к несуществующему посту возвращается статус 404.'
+assert_status_in = (<HTTPStatus.NOT_FOUND: 404>,), assert_status_not_in = ()
+assert_redirect = None
+
+    @staticmethod
+    def test_response_cbk(
+        response: HttpResponse,
+        err_msg: str,
+        assert_status_in: Sequence[int] = tuple(),
+        assert_status_not_in: Sequence[int] = tuple(),
+        assert_redirect: Optional[Union[TitledUrlRepr, bool]] = None,
+    ):
+        if assert_status_in and response.status_code not in assert_status_in:
+>           raise AssertionError(err_msg)
+E           AssertionError: Убедитесь, что при попытке создания комментария к несуществующему посту возвращается статус 404.
+
+tests/form/base_form_tester.py:462: AssertionError
+
+The above exception was the direct cause of the following exception:
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x10492efc0>
+form = <CommentForm bound=True, valid=True, fields=(comment)>
+qs = <QuerySet []>
+submitter = <form.base_form_tester.AuthorisedSubmitTester object at 0x104a56da0>
+assert_created = False
+
+    def try_create_item(
+        self,
+        form: BaseForm,
+        qs: QuerySet,
+        submitter: SubmitTester,
+        assert_created: bool = True,
+    ) -> Tuple[HttpResponse, Model]:
+        try:
+>           return super().try_create_item(form, qs, submitter, assert_created)
+
+tests/form/comment/create_form_tester.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x10492efc0>
+form = <CommentForm bound=True, valid=True, fields=(comment)>
+qs = <QuerySet []>
+submitter = <form.base_form_tester.AuthorisedSubmitTester object at 0x104a56da0>
+assert_created = False
+
+    def try_create_item(
+        self,
+        form: BaseForm,
+        qs: QuerySet,
+        submitter: SubmitTester,
+        assert_created: bool = True,
+    ) -> Tuple[HttpResponse, Model]:
+        if not form.is_valid():
+            raise FormValidationException(form.errors)
+        elif form.errors:
+            raise FormValidationException(form.errors)
+    
+        items_before = set(qs.all())
+    
+        restored_data = restore_cleaned_data(form.cleaned_data)
+        try:
+            response = submitter.test_submit(
+                url=self._action, data=restored_data
+            )
+        except Exception as e:
+>           raise FormValidationException(e) from e
+E           form.base_form_tester.FormValidationException: Убедитесь, что при попытке создания комментария к несуществующему посту возвращается статус 404.
+
+tests/form/base_form_tester.py:207: FormValidationException
+
+The above exception was the direct cause of the following exception:
+
+user_client = <django.test.client.Client object at 0x1048fccb0>
+another_user_client = <django.test.client.Client object at 0x1049bde20>
+unlogged_client = <django.test.client.Client object at 0x1048fd850>
+post_with_published_location = <Post: Likely Push Force One Peace Child>
+another_user = <User: goodmankurt>
+post_comment_context_form_item = KeyVal(key='form', val=<CommentForm bound=False, valid=False, fields=(comment)>)
+CommentModel = <class 'blog.models.Comment'>
+CommentModelAdapter = <class 'adapters.comment.CommentModelAdapter.<locals>._CommentModelAdapter'>
+
+    @pytest.mark.django_db(transaction=True)
+    def test_404_on_comment_deleted_post(
+            user_client: django.test.Client,
+            another_user_client: django.test.Client,
+            unlogged_client: django.test.Client,
+            post_with_published_location: Any,
+            another_user: Model,
+            post_comment_context_form_item: Tuple[str, BaseForm],
+            CommentModel: Type[Model],
+            CommentModelAdapter: CommentModelAdapterT,
+    ):
+        post_with_published_location.author = another_user
+        post_with_published_location.save()
+        _, ctx_form = post_comment_context_form_item
+        a_post_get_response = get_a_post_get_response_safely(
+            user_client, post_with_published_location.id
+        )
+        creation_tester = CreateCommentFormTester(
+            a_post_get_response,
+            CommentModel,
+            user_client,
+            another_user_client,
+            unlogged_client,
+            item_adapter=None,
+            ModelAdapter=CommentModelAdapter,
+        )
+    
+        Form: Type[BaseForm] = type(ctx_form)
+        form_to_create = create_comment_creation_forms(
+            creation_tester, Form, CommentModel, CommentModelAdapter,
+            return_single_form=True
+        )
+    
+        post_with_published_location.delete()
+        post_with_published_location.save()
+>       creation_tester.test_create_item(
+            form=form_to_create,
+            qs=CommentModel.objects.all(),
+            submitter=AuthorisedSubmitTester(
+                creation_tester,
+                test_response_cbk=(
+                    AuthorisedSubmitTester.get_test_response_404_cbk(
+                        err_msg=(
+                            "Убедитесь, что при попытке создания комментария "
+                            "к несуществующему посту возвращается статус 404."
+                        )
+                    )
+                ),
+            ),
+            assert_created=False,
+        )
+
+tests/test_comment.py:317: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/form/base_form_tester.py:264: in test_create_item
+    response, created = self.try_create_item(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <form.comment.create_form_tester.CreateCommentFormTester object at 0x10492efc0>
+form = <CommentForm bound=True, valid=True, fields=(comment)>
+qs = <QuerySet []>
+submitter = <form.base_form_tester.AuthorisedSubmitTester object at 0x104a56da0>
+assert_created = False
+
+    def try_create_item(
+        self,
+        form: BaseForm,
+        qs: QuerySet,
+        submitter: SubmitTester,
+        assert_created: bool = True,
+    ) -> Tuple[HttpResponse, Model]:
+        try:
+            return super().try_create_item(form, qs, submitter, assert_created)
+        except FormValidationException as e:
+>           raise AssertionError(
+                "При создании комментария возникает ошибка:\n"
+                f"{type(e).__name__}: {e}"
+            ) from e
+E           AssertionError: При создании комментария возникает ошибка:
+E           FormValidationException: Убедитесь, что при попытке создания комментария к несуществующему посту возвращается статус 404.
+
+tests/form/comment/create_form_tester.py:85: AssertionError
+__________________________________ test_post ___________________________________
+
+self = <form.post.create_form_tester.CreatePostFormTester object at 0x1049cf4a0>
+forms = [<PostForm bound=True, valid=True, fields=(title;text;location;category;pub_date;image;is_published)>, <PostForm bound...s_published)>, <PostForm bound=True, valid=Unknown, fields=(title;text;location;category;pub_date;image;is_published)>]
+qs = <QuerySet [<Post: Through Business Process Tough Newspaper While>]>
+
+    def test_create_several(
+        self, forms: Iterable[BaseForm], qs: QuerySet
+    ) -> Tuple[HttpResponse, List[Model]]:
+        created_items = []
+        for form in forms:
+            try:
+>               response, created = self.test_create_item(
+                    form,
+                    qs,
+                    AuthorisedSubmitTester(
+                        self,
+                        test_response_cbk=(
+                            AuthorisedSubmitTester.get_test_response_ok_cbk(
+                                tester=self
+                            )
+                        ),
+                    ),
+                    assert_created=True,
+                )
+
+tests/form/base_form_tester.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/form/base_form_tester.py:264: in test_create_item
+    response, created = self.try_create_item(
+tests/form/post/create_form_tester.py:77: in try_create_item
+    return super().try_create_item(form, qs, submitter, assert_created)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <form.post.create_form_tester.CreatePostFormTester object at 0x1049cf4a0>
+form = <PostForm bound=True, valid=True, fields=(title;text;location;category;pub_date;image;is_published)>
+qs = <QuerySet [<Post: Through Business Process Tough Newspaper While>]>
+submitter = <form.base_form_tester.AuthorisedSubmitTester object at 0x1049fabc0>
+assert_created = True
+
+    def try_create_item(
+        self,
+        form: BaseForm,
+        qs: QuerySet,
+        submitter: SubmitTester,
+        assert_created: bool = True,
+    ) -> Tuple[HttpResponse, Model]:
+        if not form.is_valid():
+            raise FormValidationException(form.errors)
+        elif form.errors:
+            raise FormValidationException(form.errors)
+    
+        items_before = set(qs.all())
+    
+        restored_data = restore_cleaned_data(form.cleaned_data)
+        try:
+            response = submitter.test_submit(
+                url=self._action, data=restored_data
+            )
+        except Exception as e:
+            raise FormValidationException(e) from e
+    
+        items_after: Set[Model] = set(qs.all())
+        created_items = items_after - items_before
+        n_created = len(created_items)
+        created = next(iter(created_items)) if created_items else None
+    
+        if assert_created:
+            if not n_created:
+>               raise ItemNotCreatedException()
+E               conftest.ItemNotCreatedException
+
+tests/form/base_form_tester.py:216: ItemNotCreatedException
+
+During handling of the above exception, another exception occurred:
+
+published_category = <Category: Goal Land Reality Cup Partner Really>
+published_location = <Location: Dr. Briana Reid DDS>
+user_client = <django.test.client.Client object at 0x104a43ef0>
+another_user_client = <django.test.client.Client object at 0x104a421e0>
+unlogged_client = <django.test.client.Client object at 0x1049cd790>
+comment_to_a_post = <Comment: Character you space pressure well quality law not. Treat keep discussion onto financial film call.
+Several should knowledge lose. Bed scene eye price choose. Ten show upon ground.>
+create_post_context_form_item = KeyVal(key='form', val=<PostForm bound=False, valid=False, fields=(title;text;location;category;pub_date;image;is_published)>)
+PostModel = <class 'blog.models.Post'>
+CommentModelAdapter = <class 'adapters.comment.CommentModelAdapter.<locals>._CommentModelAdapter'>
+main_content_tester = <test_content.MainPostContentTester object at 0x1049638f0>
+
+    @pytest.mark.django_db(transaction=True)
+    def test_post(
+            published_category: Model,
+            published_location: Model,
+            user_client: django.test.Client,
+            another_user_client: django.test.Client,
+            unlogged_client: django.test.Client,
+            comment_to_a_post: Model,
+            create_post_context_form_item: Tuple[str, BaseForm],
+            PostModel: Type[Model],
+            CommentModelAdapter: CommentModelAdapterT,
+            main_content_tester: MainPostContentTester
+    ):
+        _, ctx_form = create_post_context_form_item
+    
+        create_a_post_get_response = get_create_a_post_get_response_safely(
+            user_client
+        )
+    
+>       response_on_created, created_items = _test_create_items(
+            PostModel,
+            PostModelAdapter,
+            another_user_client,
+            create_a_post_get_response,
+            ctx_form,
+            published_category,
+            published_location,
+            unlogged_client,
+            user_client,
+        )
+
+tests/test_post.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_post.py:308: in _test_create_items
+    response_on_created, created_items = creation_tester.test_create_several(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <form.post.create_form_tester.CreatePostFormTester object at 0x1049cf4a0>
+forms = [<PostForm bound=True, valid=True, fields=(title;text;location;category;pub_date;image;is_published)>, <PostForm bound...s_published)>, <PostForm bound=True, valid=Unknown, fields=(title;text;location;category;pub_date;image;is_published)>]
+qs = <QuerySet [<Post: Through Business Process Tough Newspaper While>]>
+
+    def test_create_several(
+        self, forms: Iterable[BaseForm], qs: QuerySet
+    ) -> Tuple[HttpResponse, List[Model]]:
+        created_items = []
+        for form in forms:
+            try:
+                response, created = self.test_create_item(
+                    form,
+                    qs,
+                    AuthorisedSubmitTester(
+                        self,
+                        test_response_cbk=(
+                            AuthorisedSubmitTester.get_test_response_ok_cbk(
+                                tester=self
+                            )
+                        ),
+                    ),
+                    assert_created=True,
+                )
+            except ItemNotCreatedException:
+>               raise AssertionError(self.item_not_created_assertion_msg)
+E               AssertionError: Убедитесь, что при отправке формы создания поста авторизованным пользователем в базе данных создаётся один и только один объект поста.
+
+tests/form/base_form_tester.py:308: AssertionError
+========================= 4 failed, 22 passed in 0.57s =========================
