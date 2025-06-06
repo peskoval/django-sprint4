@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
+
 from .models import Comment, Post
+
 
 class UserForm(forms.ModelForm):
 
@@ -13,7 +15,15 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = ('title', 'text', 'location', 'category', 'pub_date', 'image', 'is_published')
+        fields = (
+            'title',
+            'text',
+            'location',
+            'category',
+            'pub_date',
+            'image',
+            'is_published',
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

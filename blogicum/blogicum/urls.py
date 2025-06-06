@@ -1,13 +1,12 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path, reverse_lazy
 from django.contrib.auth import urls
 from django.contrib.auth.forms import UserCreationForm
+from django.urls import include, path, reverse_lazy
 from django.views.generic.edit import CreateView
-from django.conf import settings
 
-from django.conf.urls.static import static
-
-# from .views import trigger_error
+from .views import trigger_error
 
 
 urlpatterns = [
@@ -22,9 +21,9 @@ urlpatterns = [
         name='registration',
     ),
     path('auth/', include('django.contrib.auth.urls')),
+    path('trigger_error/', trigger_error),
     path('', include('blog.urls')),
-    # path('trigger_error/', trigger_error)
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404 = 'pages.views.page_not_found'
 handler500 = 'pages.views.server_error'

@@ -50,9 +50,12 @@ class PostDetailView(DetailView):
     template_name = 'blog/detail.html'
     pk_url_kwarg = 'post_id'
 
+    def get_object(self, queryset=None):
+        post_id = self.kwargs.get(self.pk_url_kwarg)
+        return get_object_or_404(Post, id=post_id)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # post = get_object_or_404(Post, id=self.request['post_id'])
         post = self.get_object()
         context['form'] = CommentForm()
         context['comments'] = post.comments.all()
@@ -196,6 +199,10 @@ class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     fields = ('comment',)
     template_name = 'blog/comment.html'
 
+    def get_object(self, queryset=None):
+        comment_id = self.kwargs.get(self.pk_url_kwarg)
+        return get_object_or_404(Comment, id=comment_id)
+
     def form_valid(self, form):
         post_id = self.kwargs.get('post_id')
         post = get_object_or_404(Post, id=post_id)
@@ -235,16 +242,16 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
 
+    def get_object(self, queryset=None):
+        comment_id = self.kwargs.get(self.pk_url_kwarg)
+        return get_object_or_404(Comment, id=comment_id)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         comment = self.get_object()
         context['post'] = comment.post
         context['author_username'] = comment.post.author.username
         return context
-
-    def get_object(self, queryset=None):
-        comment_id = self.kwargs.get(self.pk_url_kwarg)
-        return get_object_or_404(Comment, id=comment_id)
 
     def test_func(self):
         comment = self.get_object()
