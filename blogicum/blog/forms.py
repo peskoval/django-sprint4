@@ -1,13 +1,13 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Comment, Post
+from .models import Comment, Post, User
 
 
 class UserForm(forms.ModelForm):
 
     class Meta:
-        model = get_user_model()
+        model = User
         fields = ('username', 'first_name', 'last_name', 'email')
 
 

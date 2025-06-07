@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
@@ -37,25 +38,8 @@ class Index(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['user'] = self.request.user
-        for post in context['object_list']:
-            post.comment_count = post.comments.count()
-        return context
-
-
-class PostDetailView(DetailView):
-    model = Post
-    template_name = 'blog/detail.html'
-    pk_url_kwarg = 'post_id'
-
-    def get_object(self, queryset=None):
-        post_id = self.kwargs.get(self.pk_url_kwarg)
-        return get_object_or_404(Post, id=post_id)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        post = self.get_object()
-        context['form'] = CommentForm()
-        context['comments'] = post.comments.all()
+        for post_object in context['object_list']:
+            post_object.comment_count = post_object.comments.count()
         return context
 
 
@@ -88,13 +72,18 @@ class UserProfileView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['get_full_name'] = self.object.get_full_name()
+        authors_posts = Post.objects.filter(author=self.get_object())
         paginator = Paginator(
-            Post.objects.filter(author=self.get_object()),
+            # Post.objects.filter(author=self.get_object()),
+            authors_posts,
             10,
         )
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         context['page_obj'] = page_obj
+        for post in authors_posts:
+            context['post.comment_count'] = post.comments.count()
+        # context['comment_count'] = Post.objects.filter(author=self.get_object()).comments.count()
         return context
 
 
@@ -119,7 +108,7 @@ class EditProfileView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         )
 
 
-class CreatePost(CreateView, LoginRequiredMixin):
+class CreatePost(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
@@ -138,10 +127,33 @@ class CreatePost(CreateView, LoginRequiredMixin):
         return reverse_lazy('blog:profile', kwargs={'username': self.request.user})
 
 
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/detail.html'
+    pk_url_kwarg = 'post_id'
+
+    def get_object(self, queryset=None):
+        post_id = self.kwargs.get(self.pk_url_kwarg)
+        post_object = get_object_or_404(Post, id=post_id)
+        if self.request.user == post_object.author:
+            return post_object
+        if post_object == get_object_or_404(posts_filter(Post.objects), id=post_id):
+            return post_object
+        raise Http404("404")
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = self.get_object()
+        context['form'] = CommentForm()
+        context['comments'] = post.comments.all()
+        return context
+
+
 class EditPostView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     pk_url_kwarg = 'post_id'
-    fields = ['title', 'text', 'location', 'category', 'pub_date']
+    fields = ['title', 'text', 'location', 'category', 'pub_date', 'image', 'is_published']
     template_name = 'blog/create.html'
 
     def test_func(self):
@@ -258,10 +270,6 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
-
-    # def get_object(self, queryset=None):
-    #     comment_id = self.kwargs.get(self.pk_url_kwarg)
-    #     return get_object_or_404(Comment, id=comment_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

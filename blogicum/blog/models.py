@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 
+User = get_user_model()
+
 PUB_DATE_HELP = (
     'Если установить дату и время в будущем — можно делать '
     'отложенные публикации.')
@@ -61,7 +63,7 @@ class Post(PublicationModel):
         help_text=PUB_DATE_HELP,
     )
     author = models.ForeignKey(
-        get_user_model(),
+        User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
         related_name='posts',
@@ -101,7 +103,7 @@ class Comment(models.Model):
         related_name='comments'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('created_at',)
