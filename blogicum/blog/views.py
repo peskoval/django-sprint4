@@ -135,7 +135,7 @@ class CreatePost(CreateView, LoginRequiredMixin):
 
     def get_success_url(self):
         username = self.request.user
-        return reverse_lazy('blog:profile', kwargs={'username': username})
+        return reverse_lazy('blog:profile', kwargs={'username': self.request.user})
 
 
 class EditPostView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):

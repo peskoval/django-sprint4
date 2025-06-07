@@ -203,8 +203,8 @@ class BaseFormTester(BaseTester):
             response = submitter.test_submit(
                 url=self._action, data=restored_data
             )
-        except Exception:
-            raise FormValidationException()
+        except Exception as e:
+            raise FormValidationException(e) from e
 
         items_after: Set[Model] = set(qs.all())
         created_items = items_after - items_before

@@ -94,7 +94,7 @@ class Post(PublicationModel):
 
 
 class Comment(models.Model):
-    comment = models.TextField(max_length=255, verbose_name='Комментарий')
+    text = models.TextField(max_length=255, verbose_name='Комментарий')
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
