@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import (
     CreateView,
@@ -98,9 +98,9 @@ class EditProfileView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user.username == self.get_object().username
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:profile',
-            kwargs={'username': self.request.user.username}
+            args=[self.request.user.username,]
         )
 
 
@@ -119,9 +119,9 @@ class CreatePost(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:profile',
-            kwargs={'username': self.request.user}
+            args=[self.request.user.username, ]
         )
 
 
@@ -152,15 +152,7 @@ class PostDetailView(DetailView):
 class EditPostView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
     model = Post
     pk_url_kwarg = 'post_id'
-    fields = [
-        'title',
-        'text',
-        'location',
-        'category',
-        'pub_date',
-        'image',
-        'is_published'
-    ]
+    form_class = PostForm
     template_name = 'blog/create.html'
 
     # def get_object(self, queryset=None):
@@ -177,9 +169,9 @@ class EditPostView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
 
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:post_detail',
-            kwargs={'post_id': self.get_object().id}
+            args=[self.get_object().id, ]
         )
 
 
@@ -189,9 +181,9 @@ class DeletePostView(LoginRequiredMixin, AuthorTestsMixin, DeleteView):
     pk_url_kwarg = 'post_id'
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:profile',
-            kwargs={'username': self.request.user}
+            args=[self.request.user, ]
         )
 
 
@@ -229,9 +221,9 @@ class EditCommentView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
     template_name = 'blog/comment.html'
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:post_detail',
-            kwargs={'post_id': self.get_object().post.id},
+            args=[self.get_object().post.id, ]
         )
 
 
@@ -247,13 +239,13 @@ class DeleteCommentView(LoginRequiredMixin, AuthorTestsMixin, DeleteView):
         return redirect(
             reverse(
                 'blog:post_detail',
-                kwargs={'post_id': self.get_object().post.id}
+                args=[self.get_object().post.id, ]
             ))
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:post_detail',
-            kwargs={'post_id': self.get_object().post.id},
+            args=[self.get_object().post.id, ]
         )
 
 
