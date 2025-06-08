@@ -36,6 +36,7 @@ class Category(PublicationModel):
     )
 
     class Meta:
+        ordering = ('title',)
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
@@ -47,6 +48,7 @@ class Location(PublicationModel):
     name = models.CharField(max_length=256, verbose_name='Название места', )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
 
@@ -66,7 +68,6 @@ class Post(PublicationModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        related_name='posts',
     )
 
     location = models.ForeignKey(
@@ -75,14 +76,12 @@ class Post(PublicationModel):
         blank=True,
         null=True,
         verbose_name='Местоположение',
-        related_name='posts'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='Категория',
-        related_name='posts'
     )
     image = models.ImageField('Фото', upload_to='posts_images', blank=True)
 
@@ -90,23 +89,26 @@ class Post(PublicationModel):
         ordering = ('-pub_date',)
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
+        default_related_name = 'posts'
 
     def __str__(self):
         return self.title
 
 
 class Comment(models.Model):
-    text = models.TextField(max_length=255, verbose_name='Комментарий')
+    text = models.TextField(verbose_name='Комментарий')
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name='comments'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор')
 
     class Meta:
         ordering = ('created_at',)
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'
 
     def __str__(self):
-        return self.comment
+        return self.text
