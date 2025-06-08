@@ -7,13 +7,11 @@ from django.views.generic.edit import CreateView
 
 from .views import trigger_error
 
-from blog.views import logout_view
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('pages/', include('pages.urls')),
-    path('auth/logout/', logout_view, name='logout'),
+    path('auth/', include('django.contrib.auth.urls')),
     path(
         'auth/registration/',
         CreateView.as_view(
@@ -23,7 +21,6 @@ urlpatterns = [
         ),
         name='registration',
     ),
-    path('auth/', include('django.contrib.auth.urls')),
     path('trigger_error/', trigger_error),
     path('', include('blog.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
