@@ -14,7 +14,7 @@ from django.views.generic import (
 )
 
 from .forms import CommentForm, PostForm
-from .mixins import AuthorTests
+from .mixins import AuthorTestsMixin
 from .models import Category, Comment, Post
 
 
@@ -153,7 +153,7 @@ class PostDetailView(DetailView):
         return context
 
 
-class EditPostView(LoginRequiredMixin, AuthorTests, UpdateView):
+class EditPostView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
     model = Post
     pk_url_kwarg = 'post_id'
     fields = [
@@ -167,14 +167,27 @@ class EditPostView(LoginRequiredMixin, AuthorTests, UpdateView):
     ]
     template_name = 'blog/create.html'
 
+    # def get_object(self, queryset=None):
+    #     post_id = self.kwargs.get(self.pk_url_kwarg)
+    #     post_object = get_object_or_404(Post, id=post_id)
+    #     if self.request.user == post_object.author:
+    #         return post_object
+    #     if post_object == get_object_or_404(
+    #         posts_filter(Post.objects),
+    #         id=post_id
+    #     ):
+    #         return post_object
+    #     raise Http404("404")
+
+
     def get_success_url(self):
         return reverse_lazy(
             'blog:post_detail',
-            kwargs={'post_id': self.object.id}
+            kwargs={'post_id': self.get_object().id}
         )
 
 
-class DeletePostView(LoginRequiredMixin, AuthorTests, DeleteView):
+class DeletePostView(LoginRequiredMixin, AuthorTestsMixin, DeleteView):
     model = Post
     template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
@@ -212,7 +225,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class EditCommentView(LoginRequiredMixin, AuthorTests, UpdateView):
+class EditCommentView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
     model = Comment
     pk_url_kwarg = 'comment_id'
     fields = ('text',)
@@ -239,7 +252,7 @@ class EditCommentView(LoginRequiredMixin, AuthorTests, UpdateView):
         )
 
 
-class DeleteCommentView(LoginRequiredMixin, AuthorTests, DeleteView):
+class DeleteCommentView(LoginRequiredMixin, AuthorTestsMixin, DeleteView):
     model = Comment
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
