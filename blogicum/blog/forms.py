@@ -14,21 +14,11 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = (
-            'title',
-            'text',
-            'location',
-            'category',
-            'pub_date',
-            'image',
-            'is_published',
-        )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['pub_date'].widget = forms.DateTimeInput(attrs={
-            'type': 'datetime-local',
-        })
+        fields = '__all__'
+        exclude = ('author',)
+        widgets = {
+            'pub_date': forms.DateTimeInput(attrs={'type': 'datetime-local'})
+        }
 
 
 class CommentForm(forms.ModelForm):
