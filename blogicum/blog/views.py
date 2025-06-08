@@ -18,6 +18,8 @@ from .mixins import AuthorTestsMixin
 from .models import Category, Comment, Post
 
 
+PAGING_OBJECTS = 10
+
 def posts_filter(posts_objects):
     return posts_objects.filter(
         pub_date__lte=timezone.now(),
@@ -33,12 +35,11 @@ def posts_filter(posts_objects):
 class Index(ListView):
     model = Post
     queryset = posts_filter(Post.objects)
-    paginate_by = 10
+    paginate_by = PAGING_OBJECTS
     template_name = 'blog/index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user'] = self.request.user
         for post_object in context['object_list']:
             post_object.comment_count = post_object.comments.count()
         return context
@@ -47,7 +48,7 @@ class Index(ListView):
 class CategoryPosts(ListView):
     model = Post
     template_name = 'blog/category.html'
-    paginate_by = 10
+    paginate_by = PAGING_OBJECTS
 
     def get_queryset(self):
         category = get_object_or_404(
@@ -59,23 +60,18 @@ class CategoryPosts(ListView):
 
 
 class UserProfileView(DetailView):
-    User = get_user_model()
-    model = User
+    model = get_user_model()
     context_object_name = 'profile'
     template_name = 'blog/profile.html'
     slug_field = 'username'
     slug_url_kwarg = 'username'
 
-    def get_object(self, queryset=None):
-        username = self.kwargs.get(self.slug_url_kwarg)
-        return get_object_or_404(self.User, **{self.slug_field: username})
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['get_full_name'] = self.object.get_full_name()
         paginator = Paginator(
-            Post.objects.filter(author=self.get_object()),
-            10,
+            Post.objects.filter(author=self.get_object()), # добавить логику чтобы
+             # не видеть снятых с публикации постов другого пользователя
+            PAGING_OBJECTS,
         )
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -205,11 +201,12 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     template_name = 'blog/comment.html'
 
     def form_valid(self, form):
-        post_id = self.kwargs.get('post_id')
-        post = get_object_or_404(Post, id=post_id)
         form.instance.author = self.request.user
-        form.instance.post = post
-        if post.is_published and post.category.is_published:
+        form.instance.post = get_object_or_404(Post, id=self.kwargs['post_id'])
+        if (
+            form.instance.post.is_published
+            and form.instance.post.category.is_published
+        ):
             return super().form_valid(form)
         else:
             form.add_error(
@@ -228,22 +225,8 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 class EditCommentView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
     model = Comment
     pk_url_kwarg = 'comment_id'
-    fields = ('text',)
+    form_class = CommentForm
     template_name = 'blog/comment.html'
-
-    def form_valid(self, form):
-        post_id = self.kwargs.get('post_id')
-        post = get_object_or_404(Post, id=post_id)
-        form.instance.author = self.request.user
-        form.instance.post = post
-        if post.is_published and post.category.is_published:
-            return super().form_valid(form)
-        else:
-            form.add_error(
-                None,
-                "Невозможно оставить комментарий к неопубликованному посту.",
-            )
-            return self.form_invalid(form)
 
     def get_success_url(self):
         return reverse_lazy(
