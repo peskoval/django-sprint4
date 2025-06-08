@@ -7,10 +7,13 @@ from django.views.generic.edit import CreateView
 
 from .views import trigger_error
 
+from blog.views import logout_view
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('pages/', include('pages.urls')),
+    path('auth/logout/', logout_view, name='logout'),
     path(
         'auth/registration/',
         CreateView.as_view(
