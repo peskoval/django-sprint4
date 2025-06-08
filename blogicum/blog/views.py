@@ -167,16 +167,6 @@ class EditPostView(LoginRequiredMixin, AuthorTests, UpdateView):
     ]
     template_name = 'blog/create.html'
 
-    # def test_func(self):
-    #     return self.request.user == self.get_object().author
-
-    # def handle_no_permission(self):
-    #     return redirect(
-    #         reverse(
-    #             'blog:post_detail',
-    #             kwargs={'post_id': self.get_object().id}
-    #         ))
-
     def get_success_url(self):
         return reverse_lazy(
             'blog:post_detail',
@@ -188,15 +178,6 @@ class DeletePostView(LoginRequiredMixin, AuthorTests, DeleteView):
     model = Post
     template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
-
-    # def test_func(self):
-    #     return self.request.user == self.get_object().author
-
-    # def handle_no_permission(self):
-    #     return redirect(reverse(
-    #         'blog:post_detail',
-    #         kwargs={'post_id': self.get_object().id}
-    #     ))
 
     def get_success_url(self):
         return reverse_lazy(
