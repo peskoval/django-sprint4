@@ -11,6 +11,7 @@ from django.views.generic import (
     DetailView,
     ListView,
     UpdateView,
+    View,
 )
 
 from .forms import CommentForm, PostForm
@@ -81,21 +82,13 @@ class UserProfileView(DetailView):
         return context
 
 
-class EditProfileView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class EditProfileView(LoginRequiredMixin, UpdateView):
     model = get_user_model()
     fields = ('username', 'first_name', 'last_name', 'email',)
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
     template_name = 'blog/user.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(
-            get_user_model(),
-            **{self.slug_field: self.request.user.username}
-        )
-
-    def test_func(self):
-        return self.request.user.username == self.get_object().username
+        return self.request.user
 
     def get_success_url(self):
         return reverse(
@@ -108,11 +101,6 @@ class CreatePost(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["author"] = self.request.user.id
-        return context
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -208,47 +196,29 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
 
     def get_success_url(self):
+        post_id = self.kwargs['post_id']
         return reverse(
             'blog:post_detail',
-            kwargs={'post_id': self.object.post.id},
+            kwargs={'post_id': post_id}
         )
 
 
-class EditCommentView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
+class BaseCommentView(LoginRequiredMixin, AuthorTestsMixin):
     model = Comment
     pk_url_kwarg = 'comment_id'
+    template_name = 'blog/comment.html'
+
+    def get_success_url(self):
+        post_id = self.kwargs['post_id']
+        return reverse(
+            'blog:post_detail',
+            kwargs={'post_id': post_id}
+        )
+
+
+class EditCommentView(BaseCommentView, UpdateView):
     form_class = CommentForm
-    template_name = 'blog/comment.html'
-
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail',
-            args=[self.get_object().post.id, ]
-        )
 
 
-class DeleteCommentView(LoginRequiredMixin, AuthorTestsMixin, DeleteView):
-    model = Comment
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
-
-    def test_func(self):
-        return self.request.user == self.get_object().author
-
-    def handle_no_permission(self):
-        return redirect(
-            reverse(
-                'blog:post_detail',
-                args=[self.get_object().post.id, ]
-            ))
-
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail',
-            args=[self.get_object().post.id, ]
-        )
-
-
-def logout_view(request):
-    logout(request)
-    return redirect(reverse('blog:index'))
+class DeleteCommentView(BaseCommentView, DeleteView):
+    pass
