@@ -188,16 +188,16 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         form.instance.post = get_object_or_404(Post, id=self.kwargs['post_id'])
-        if (
-            form.instance.post.is_published
-            and form.instance.post.category.is_published
-        ):
-            return super().form_valid(form)
-        else:
-            form.add_error(
-                None,
-                "Невозможно оставить комментарий к неопубликованному посту.",
-            )
+        # if (
+        #     form.instance.post.is_published
+        #     and form.instance.post.category.is_published
+        # ):
+        #     return super().form_valid(form)
+        # else:
+        #     form.add_error(
+        #         None,
+        #         "Невозможно оставить комментарий к неопубликованному посту.",
+        #     )
             return self.form_invalid(form)
 
     def get_success_url(self):
