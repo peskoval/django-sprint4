@@ -85,30 +85,21 @@ class UserProfileView(DetailView):
     slug_url_kwarg = 'username'
 
     def get_context_data(self, **kwargs):
-        # if self.get_object() == self.request.user:
-        #     postquery = comments_count(
-        #         posts_filter(
-        #             self.get_object().posts.all(),
-        #             published=False
-        #         ))
-        # else:
-        #     postquery = comments_count(
-        #         posts_filter(self.get_object().posts.all())
-        #     )
-        # return super().get_context_data(
-        #     **kwargs,
-        #     page_obj=paging(postquery, self.request)
-        # )
-        user = self.get_object()
-        postquery = comments_count(
-            posts_filter(
-                user.posts.all(),
-                is_published=(user == self.request.user)  # Условие для фильтрации
+        if self.get_object() == self.request.user:
+            postquery = comments_count(
+                posts_filter(
+                    self.get_object().posts.all(),
+                    published=False
+                ))
+        else:
+            postquery = comments_count(
+                posts_filter(self.get_object().posts.all())
             )
+        return super().get_context_data(
+            **kwargs,
+            page_obj=paging(postquery, self.request)
         )
-        context = super().get_context_data(**kwargs)
-        context['page_obj'] = paging(postquery, self.request)
-        return context
+
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
     model = get_user_model()
