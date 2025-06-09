@@ -10,7 +10,7 @@ from django.views.generic import (
     DeleteView,
     DetailView,
     ListView,
-    UpdateView,
+    UpdateView
 )
 
 from .forms import CommentForm, PostForm, UserForm
