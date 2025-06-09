@@ -22,25 +22,28 @@ PAGING_OBJECTS = 10
 
 
 def posts_query(
-    posts_objects=Post.objects,
+    posts=Post.objects,
     published=True,
-    select_related_fields=None,
+    select_related=False,
     comments_count=None
 ):
-    posts_query = posts_objects
+    posts_query = posts
     if published:
         posts_query = posts_query.filter(
             pub_date__lte=timezone.now(),
             is_published=True,
             category__is_published=True,
         )
-    if select_related_fields:
-        posts_query = posts_query.select_related(*select_related_fields)
+    if select_related:
+        posts_query = posts_query.select_related(
+            'author',
+            'category',
+            'location')
     if comments_count:
         posts_query = posts_query.annotate(
             comment_count=Count("comments")
         ).order_by("-pub_date")
-    return posts_query
+    return posts_query.order_by(*posts.model._meta.ordering)
 
 
 def paging(posts, request, paginate_by=PAGING_OBJECTS):
