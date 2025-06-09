@@ -21,7 +21,11 @@ from .models import Category, Comment, Post
 PAGING_OBJECTS = 10
 
 
-def posts_filter(posts_objects, published=True, select_related_fields=None):
+def posts_filter(
+    posts_objects=Post.objects,
+    published=True,
+    select_related_fields=None
+):
     posts_query = posts_objects
     if published:
         posts_query = posts_query.filter(
@@ -52,12 +56,9 @@ def paging(posts_objects, request, paginate_by=PAGING_OBJECTS):
 
 class Index(ListView):
     model = Post
-    queryset = posts_filter(Post.objects)
+    queryset = comments_count(posts_filter())
     paginate_by = PAGING_OBJECTS
     template_name = 'blog/index.html'
-
-    def get_queryset(self):
-        return comments_count(posts_filter(Post.objects))
 
 
 class CategoryPosts(ListView):
@@ -143,7 +144,7 @@ class PostDetailView(DetailView):
         post = super().get_object(queryset)
         if self.request.user == post.author:
             return post
-        return super().get_object(posts_filter(Post.objects))
+        return super().get_object(posts_filter())
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
