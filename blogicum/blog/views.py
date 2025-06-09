@@ -50,7 +50,8 @@ def paging(posts_objects, request, paginate_by=PAGING_OBJECTS):
         posts_objects,
         paginate_by,
     )
-    return paginator.get_page(request.GET.get('page'))
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
 
 
 class Index(ListView):
