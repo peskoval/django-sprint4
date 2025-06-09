@@ -45,13 +45,11 @@ def comments_count(posts_objects):
     )
 
 
-def paging(posts_objects, request, paginate_by=PAGING_OBJECTS):
-    paginator = Paginator(
-        posts_objects,
+def paging(posts, request, paginate_by=PAGING_OBJECTS):
+    return Paginator(
+        posts,
         paginate_by,
-    )
-    page_number = request.GET.get('page')
-    return paginator.get_page(page_number)
+    ).get_page(request.GET.get('page'))
 
 
 class Index(ListView):
