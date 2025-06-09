@@ -21,7 +21,7 @@ from .models import Category, Comment, Post
 PAGING_OBJECTS = 10
 
 
-def posts_filter(
+def posts_query(
     posts_objects=Post.objects,
     published=True,
     select_related_fields=None,
@@ -52,7 +52,7 @@ def paging(posts, request, paginate_by=PAGING_OBJECTS):
 
 class Index(ListView):
     model = Post
-    queryset = posts_filter(comments_count=True)
+    queryset = posts_query(comments_count=True)
     paginate_by = PAGING_OBJECTS
     template_name = 'blog/index.html'
 
@@ -68,7 +68,7 @@ class CategoryPosts(ListView):
             slug=self.kwargs['category_slug'],
             is_published=True,
         )
-        return posts_filter(category.posts.all(), comments_count=True)
+        return posts_query(category.posts.all(), comments_count=True)
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
@@ -88,7 +88,7 @@ class UserProfileView(DetailView):
         if self.get_object() == self.request.user:
             return super().get_context_data(
                 **kwargs,
-                page_obj=paging(posts_filter(
+                page_obj=paging(posts_query(
                     self.get_object().posts.all(),
                     published=False,
                     comments_count=True,
@@ -97,7 +97,7 @@ class UserProfileView(DetailView):
         else:
             return super().get_context_data(
                 **kwargs,
-                page_obj=paging(posts_filter(
+                page_obj=paging(posts_query(
                     self.get_object().posts.all(),
                     comments_count=True
                 ), self.request))
@@ -143,7 +143,7 @@ class PostDetailView(DetailView):
         post = super().get_object(queryset)
         if self.request.user == post.author:
             return post
-        return super().get_object(posts_filter())
+        return super().get_object(posts_query())
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
