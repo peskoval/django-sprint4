@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
 from django.core.paginator import Paginator
-from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import (
@@ -11,7 +11,6 @@ from django.views.generic import (
     DetailView,
     ListView,
     UpdateView,
-    View,
 )
 
 from .forms import CommentForm, PostForm
@@ -21,16 +20,34 @@ from .models import Category, Comment, Post
 
 PAGING_OBJECTS = 10
 
-def posts_filter(posts_objects):
-    return posts_objects.filter(
-        pub_date__lte=timezone.now(),
-        is_published=True,
-        category__is_published=True,
-    ).select_related(
-        'author',
-        'category',
-        'location',
+
+def posts_filter(posts_objects, published=True, select_related_fields=None):
+    posts_query = posts_objects
+    if published:
+        posts_query = posts_query.filter(
+            pub_date__lte=timezone.now(),
+            is_published=True,
+            category__is_published=True,
+        )
+    if select_related_fields:
+        posts_query.select_related(*select_related_fields)
+    return posts_query
+
+
+def comments_count(posts_objects):
+    return (
+        posts_objects.annotate(comment_count=Count("comments"))
+        .order_by("-pub_date")
     )
+
+
+def paging(posts_objects, request, paginate_by=PAGING_OBJECTS):
+    paginator = Paginator(
+        posts_objects,
+        paginate_by,
+    )
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
 
 
 class Index(ListView):
@@ -39,11 +56,8 @@ class Index(ListView):
     paginate_by = PAGING_OBJECTS
     template_name = 'blog/index.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        for post_object in context['object_list']:
-            post_object.comment_count = post_object.comments.count()
-        return context
+    def get_queryset(self):
+        return comments_count(posts_filter(Post.objects))
 
 
 class CategoryPosts(ListView):
@@ -57,7 +71,10 @@ class CategoryPosts(ListView):
             slug=self.kwargs['category_slug'],
             is_published=True,
         )
-        return posts_filter(Post.objects).filter(category=category)
+        return comments_count(posts_filter(category.posts.all()))
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs, category=self.get_queryset())
 
 
 class UserProfileView(DetailView):
@@ -68,18 +85,20 @@ class UserProfileView(DetailView):
     slug_url_kwarg = 'username'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        paginator = Paginator(
-            Post.objects.filter(author=self.get_object()), # добавить логику чтобы
-             # не видеть снятых с публикации постов другого пользователя
-            PAGING_OBJECTS,
+        if self.get_object() == self.request.user:
+            postquery = comments_count(
+                posts_filter(
+                    self.get_object().posts.all(),
+                    published=False
+                ))
+        else:
+            postquery = comments_count(
+                posts_filter(self.get_object().posts.all())
+            )
+        return super().get_context_data(
+            **kwargs,
+            page_obj=paging(postquery, self.request)
         )
-        page_number = self.request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        context['page_obj'] = page_obj
-        for post in page_obj:
-            post.comment_count = post.comments.count()
-        return context
 
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
@@ -129,10 +148,11 @@ class PostDetailView(DetailView):
         return super().get_object(queryset)
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = CommentForm()
-        context['comments'] = self.get_object().comments.all()
-        return context
+        return super().get_context_data(
+            **kwargs,
+            form=CommentForm(),
+            comments=self.get_object().comments.all()
+        )
 
 
 class EditPostView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
