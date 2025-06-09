@@ -141,11 +141,7 @@ class PostDetailView(DetailView):
         post = super().get_object(queryset)
         if self.request.user == post.author:
             return post
-        # post = get_object_or_404(
-        #     Post.objects.filter(is_published=True),
-        #     id=post.id
-        # )
-        return super().get_object(queryset)
+        return super().get_object(posts_filter(Post.objects))
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
