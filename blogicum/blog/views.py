@@ -24,7 +24,8 @@ PAGING_OBJECTS = 10
 def posts_filter(
     posts_objects=Post.objects,
     published=True,
-    select_related_fields=None
+    select_related_fields=None,
+    comments_count=None
 ):
     posts_query = posts_objects
     if published:
@@ -34,15 +35,12 @@ def posts_filter(
             category__is_published=True,
         )
     if select_related_fields:
-        posts_query.select_related(*select_related_fields)
+        posts_query = posts_query.select_related(*select_related_fields)
+    if comments_count:
+        posts_query = posts_query.annotate(
+            comment_count=Count("comments")
+        ).order_by("-pub_date")
     return posts_query
-
-
-def comments_count(posts_objects):
-    return (
-        posts_objects.annotate(comment_count=Count("comments"))
-        .order_by("-pub_date")
-    )
 
 
 def paging(posts, request, paginate_by=PAGING_OBJECTS):
@@ -54,7 +52,7 @@ def paging(posts, request, paginate_by=PAGING_OBJECTS):
 
 class Index(ListView):
     model = Post
-    queryset = comments_count(posts_filter())
+    queryset = posts_filter(comments_count=True)
     paginate_by = PAGING_OBJECTS
     template_name = 'blog/index.html'
 
@@ -70,7 +68,7 @@ class CategoryPosts(ListView):
             slug=self.kwargs['category_slug'],
             is_published=True,
         )
-        return comments_count(posts_filter(category.posts.all()))
+        return posts_filter(category.posts.all(), comments_count=True)
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
@@ -90,16 +88,19 @@ class UserProfileView(DetailView):
         if self.get_object() == self.request.user:
             return super().get_context_data(
                 **kwargs,
-                page_obj=paging(comments_count(posts_filter(
+                page_obj=paging(posts_filter(
                     self.get_object().posts.all(),
-                    published=False
-                )), self.request))
+                    published=False,
+                    comments_count=True,
+                ), self.request))
+
         else:
             return super().get_context_data(
                 **kwargs,
-                page_obj=paging(comments_count(posts_filter(
-                    self.get_object().posts.all()
-                )), self.request))
+                page_obj=paging(posts_filter(
+                    self.get_object().posts.all(),
+                    comments_count=True
+                ), self.request))
 
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
