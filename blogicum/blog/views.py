@@ -27,23 +27,23 @@ def posts_query(
     select_related=False,
     comments_count=None
 ):
-    posts_query = posts
+    posts = posts
     if published:
-        posts_query = posts_query.filter(
+        posts = posts.filter(
             pub_date__lte=timezone.now(),
             is_published=True,
             category__is_published=True,
         )
     if select_related:
-        posts_query = posts_query.select_related(
+        posts = posts.select_related(
             'author',
             'category',
             'location')
     if comments_count:
-        posts_query = posts_query.annotate(
+        posts = posts.annotate(
             comment_count=Count("comments")
         ).order_by("-pub_date")
-    return posts_query.order_by(*posts.model._meta.ordering)
+    return posts.order_by(*posts.model._meta.ordering)
 
 
 def paging(posts, request, paginate_by=PAGING_OBJECTS):
@@ -189,16 +189,17 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         form.instance.post = get_object_or_404(Post, id=self.kwargs['post_id'])
-        if (
-            form.instance.post.is_published
-            and form.instance.post.category.is_published
-        ):
+        # Без проверки поста на опубликованность не прохоят тесты:
+        #   AssertionError: Убедитесь, что при отправке формы создания
+        #   комментария авторизованным пользователем в базе данных создаётся
+        #   один и только один объект комментария.
+        post = get_object_or_404(Post, id=self.kwargs['post_id'])
+        if post.is_published and post.category.is_published:
             return super().form_valid(form)
-        else:
-            form.add_error(
-                None,
-                "Невозможно оставить комментарий к неопубликованному посту.",
-            )
+        form.add_error(
+            None,
+            "Невозможно оставить комментарий к неопубликованному посту."
+        )
         return self.form_invalid(form)
 
     def get_success_url(self):
