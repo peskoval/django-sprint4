@@ -86,19 +86,18 @@ class UserProfileView(DetailView):
 
     def get_context_data(self, **kwargs):
         if self.get_object() == self.request.user:
-            postquery = comments_count(
-                posts_filter(
+            return super().get_context_data(
+                **kwargs,
+                page_obj=paging(comments_count(posts_filter(
                     self.get_object().posts.all(),
                     published=False
-                ))
+                )), self.request))
         else:
-            postquery = comments_count(
-                posts_filter(self.get_object().posts.all())
-            )
-        return super().get_context_data(
-            **kwargs,
-            page_obj=paging(postquery, self.request)
-        )
+            return super().get_context_data(
+                **kwargs,
+                page_obj=paging(comments_count(posts_filter(
+                    self.get_object().posts.all()
+                )), self.request))
 
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
