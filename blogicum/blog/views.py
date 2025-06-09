@@ -13,7 +13,7 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import CommentForm, PostForm
+from .forms import CommentForm, PostForm, UserForm
 from .mixins import AuthorTestsMixin
 from .models import Category, Comment, Post
 
@@ -103,7 +103,7 @@ class UserProfileView(DetailView):
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
     model = get_user_model()
-    fields = ('username', 'first_name', 'last_name', 'email',)
+    form_class = UserForm
     template_name = 'blog/user.html'
 
     def get_object(self, queryset=None):
