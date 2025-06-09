@@ -119,16 +119,14 @@ class PostDetailView(DetailView):
     pk_url_kwarg = 'post_id'
 
     def get_object(self, queryset=None):
-        post_id = self.kwargs.get(self.pk_url_kwarg)
-        post_object = get_object_or_404(Post, id=post_id)
-        if self.request.user == post_object.author:
-            return post_object
-        if post_object == get_object_or_404(
-            posts_filter(Post.objects),
-            id=post_id
-        ):
-            return post_object
-        raise Http404("404")
+        post = super().get_object(queryset)
+        if self.request.user == post.author:
+            return post
+        post = get_object_or_404(
+            Post.objects.filter(is_published=True),
+            id=post.id
+        )
+        return super().get_object(queryset)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -142,19 +140,6 @@ class EditPostView(LoginRequiredMixin, AuthorTestsMixin, UpdateView):
     pk_url_kwarg = 'post_id'
     form_class = PostForm
     template_name = 'blog/create.html'
-
-    # def get_object(self, queryset=None):
-    #     post_id = self.kwargs.get(self.pk_url_kwarg)
-    #     post_object = get_object_or_404(Post, id=post_id)
-    #     if self.request.user == post_object.author:
-    #         return post_object
-    #     if post_object == get_object_or_404(
-    #         posts_filter(Post.objects),
-    #         id=post_id
-    #     ):
-    #         return post_object
-    #     raise Http404("404")
-
 
     def get_success_url(self):
         return reverse(
