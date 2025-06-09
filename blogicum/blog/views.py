@@ -201,10 +201,9 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
 
     def get_success_url(self):
-        post_id = self.kwargs['post_id']
         return reverse(
             'blog:post_detail',
-            kwargs={'post_id': post_id}
+            args=[self.kwargs['post_id']]
         )
 
 
@@ -214,10 +213,9 @@ class BaseCommentView(LoginRequiredMixin, AuthorTestsMixin):
     template_name = 'blog/comment.html'
 
     def get_success_url(self):
-        post_id = self.kwargs['post_id']
         return reverse(
             'blog:post_detail',
-            kwargs={'post_id': post_id}
+            args=[self.kwargs['post_id']]
         )
 
 
