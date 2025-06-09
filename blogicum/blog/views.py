@@ -74,7 +74,10 @@ class CategoryPosts(ListView):
         return comments_count(posts_filter(category.posts.all()))
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs, category=self.get_queryset())
+        return super().get_context_data(
+            **kwargs,
+            category=self.kwargs['category_slug']
+        )
 
 
 class UserProfileView(DetailView):
